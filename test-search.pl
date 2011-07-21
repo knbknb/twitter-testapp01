@@ -1,9 +1,11 @@
 #
+# command-line client to 
 # search for a real-name user on twitter.
 # will return some metadata and the latest tweet in YAML format
+# or a more compact format
 #
-# 
-#
+# SQL command , output piped into this script 
+# sqsh <credentials> -C "set rowcount 2 select DISTINCT first_name + ' ' + middle_names + ' ' + last_name as names from person where last_name like 'St%' order by last_name asc" -h -J iso_1 -b | grep -vr '^\s*$' | xargs -i perl test-search.pl --user="{}"
 
 use Modern::Perl;
 use Net::Twitter;
