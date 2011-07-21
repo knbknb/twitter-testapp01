@@ -2,14 +2,20 @@
 # search for a real-name user on twitter.
 # will return some metadata and the latest tweet in YAML format
 #
-# almost unaltered example code from
-# http://search.cpan.org/dist/Net-Twitter/lib/Net/Twitter.pod
 # 
 #
 
 use Modern::Perl;
 use Net::Twitter;
 use Scalar::Util 'blessed';
+#use JSON::XS;
+use YAML::XS;
+use Getopt::Long;
+use Try::Tiny;
+
+my %opts = ();
+GetOptions (\%opts, 'user=s');       
+$opts{user} ||= "Knut Behrends";
 
 # When no authentication is required:
 #my $nt = Net::Twitter->new(legacy => 0);
@@ -29,16 +35,106 @@ my $nt = Net::Twitter->new(
 	access_token_secret => $token_secret,
 );
 
-#use JSON::XS;
-my $search_term = "Knut Behrends";
-my $r = $nt->users_search($search_term);
+my $search_term = $opts{user};
+try {
+	my $r = $nt->users_search($search_term);
 #print encode_json $r;
-use YAML::XS;
-print Dump $r;
+#print Dump $r  ;
 
-    
-if ( my $err = $@ ) {
-	die $@ unless blessed $err && $err->isa('Net::Twitter::Error');
+	for my $user (@$r) {
+		my $t = $user->{status}{retweeted_status}{text} ||= "";
+		print "$user->{name} <$user->{screen_name}> since $user->{created_at}, id: $user->{id}\n";
+		print "$user->{name} : '$t'";
+		$t= "";
+	}
+	
+} catch {
+	my $err = $_ ;
+	die Dump $_ unless blessed $err && $err->isa('Net::Twitter::Error');
 
-	warn "HTTP Response Code: ", $err->code, "\n", "HTTP Message......: ", $err->message, "\n", "Twitter error.....: ", $err->error, "\n";
+	warn Dump "HTTP Response Code: ", $err->code, "\n", "HTTP Message......: ", $err->message, "\n", "Twitter error.....: ", $err->error, "\n";
 }
+
+
+=pod
+- contributors_enabled: !!perl/scalar:JSON::XS::Boolean 0
+  created_at: Sun Jun 28 09:20:54 +0000 2009
+  default_profile: !!perl/scalar:JSON::XS::Boolean 0
+  default_profile_image: !!perl/scalar:JSON::XS::Boolean 0
+  description: sudo -f su. Ask me anything.
+  favourites_count: 0
+  follow_request_sent: !!perl/scalar:JSON::XS::Boolean 0
+  followers_count: 5
+  following: !!perl/scalar:JSON::XS::Boolean 0
+  friends_count: 58
+  geo_enabled: !!perl/scalar:JSON::XS::Boolean 0
+  id: 51690654
+  id_str: '51690654'
+  is_translator: !!perl/scalar:JSON::XS::Boolean 0
+  lang: en
+  listed_count: 0
+  location: Germany
+  name: Knut Behrends
+  notifications: !!perl/scalar:JSON::XS::Boolean 0
+  profile_background_color: ffffff
+  profile_background_image_url: http://a1.twimg.com/profile_background_images/294252305/temp_kuvva_production_84_779_1.jpeg
+  profile_background_image_url_https: https://si0.twimg.com/profile_background_images/294252305/temp_kuvva_production_84_779_1.jpeg
+  profile_background_tile: !!perl/scalar:JSON::XS::Boolean 0
+  profile_image_url: http://a3.twimg.com/profile_images/286714859/hblau_normal.jpg
+  profile_image_url_https: https://si0.twimg.com/profile_images/286714859/hblau_normal.jpg
+  profile_link_color: '059997'
+  profile_sidebar_border_color: ffffff
+  profile_sidebar_fill_color: ffffff
+  profile_text_color: 0f0304
+  profile_use_background_image: !!perl/scalar:JSON::XS::Boolean 1
+  protected: !!perl/scalar:JSON::XS::Boolean 0
+  screen_name: sudo_f
+  show_all_inline_media: !!perl/scalar:JSON::XS::Boolean 0
+  status:
+    contributors: ~
+    coordinates: ~
+    created_at: Fri Jul 08 07:33:16 +0000 2011
+    favorited: !!perl/scalar:JSON::XS::Boolean 0
+    geo: ~
+    id: 89235586455584769
+    id_str: '89235586455584769'
+    in_reply_to_screen_name: ~
+    in_reply_to_status_id: ~
+    in_reply_to_status_id_str: ~
+    in_reply_to_user_id: ~
+    in_reply_to_user_id_str: ~
+    place: ~
+    retweet_count: 33
+    retweeted: !!perl/scalar:JSON::XS::Boolean 0
+    retweeted_status:
+      contributors: ~
+      coordinates: ~
+      created_at: Thu Jul 07 21:21:02 +0000 2011
+      favorited: !!perl/scalar:JSON::XS::Boolean 0
+      geo: ~
+      id: 89081513433497601
+      id_str: '89081513433497601'
+      in_reply_to_screen_name: ~
+      in_reply_to_status_id: ~
+      in_reply_to_status_id_str: ~
+      in_reply_to_user_id: ~
+      in_reply_to_user_id_str: ~
+      place: ~
+      retweet_count: 33
+      retweeted: !!perl/scalar:JSON::XS::Boolean 0
+      source: <a href="http://twitter.com/tweetbutton" rel="nofollow">Tweet Button</a>
+      text: Interesting article "My Summer at an Indian Call Center" http://t.co/Bow206m
+        via @motherjones
+      truncated: !!perl/scalar:JSON::XS::Boolean 0
+    source: <a href="http://twitter.com/download/android" rel="nofollow">Twitter for
+      Android</a>
+    text: 'RT @mrdenny: Interesting article "My Summer at an Indian Call Center" http://t.co/Bow206m
+      via @motherjones'
+    truncated: !!perl/scalar:JSON::XS::Boolean 0
+  statuses_count: 29
+  time_zone: Bern
+  url: ~
+  utc_offset: 3600
+  verified: !!perl/scalar:JSON::XS::Boolean 0
+
+=cut
