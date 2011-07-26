@@ -1,22 +1,23 @@
 #
-# command-line client to 
+# command-line client to
 # search for a real-name user on twitter.
 # will return some metadata and the latest tweet in YAML format
 # or a more compact format
 #
-# SQL command , output piped into this script 
-# sqsh <credentials> -C "set rowcount 2 select DISTINCT first_name + ' ' + middle_names + ' ' + last_name as names from person where last_name like 'St%' order by last_name asc" -h -J iso_1 -b | grep -vr '^\s*$' | xargs -i perl test-search.pl --user="{}"
+# SQL command , output piped into this script
+# sqsh <credentials> -C "set rowcount 2 select DISTINCT first_name + ' ' + middle_names + ' ' + last_name as names from person where last_name like 'St%' order by last_name asc" -h -J iso_1 -b | grep -vr '^\s*$' |  uniq | xargs -i perl test-search.pl --user="{}"
 
 use Modern::Perl;
 use Net::Twitter;
 use Scalar::Util 'blessed';
-#use JSON::XS;
+use JSON::XS;
 use YAML::XS;
 use Getopt::Long;
 use Try::Tiny;
+use autodie;
 
 my %opts = ();
-GetOptions (\%opts, 'user=s');       
+GetOptions( \%opts, 'user=s' );
 $opts{user} ||= "Knut Behrends";
 
 # When no authentication is required:
@@ -40,23 +41,45 @@ my $nt = Net::Twitter->new(
 my $search_term = $opts{user};
 try {
 	my $r = $nt->users_search($search_term);
-#print encode_json $r;
-#print Dump $r  ;
 
+	#
+	#print Dump $r  ;
+    my $dir = "twusers"; 
+    mkdir $dir unless -d $dir;
+    my $coder = JSON::XS->new->utf8->pretty->allow_nonref;
 	for my $user (@$r) {
+		
 		my $t = $user->{status}{retweeted_status}{text} ||= "";
-		print "$user->{name} <$user->{screen_name}> since $user->{created_at}, id: $user->{id}\n";
-		print "$user->{name} : '$t'";
-		$t= "";
+		say "search_term: $search_term";
+		say "$user->{description}:" if $user->{description};
+		say "tweets: $user->{statuses_count}, friends: $user->{friends_count}";
+		say "$user->{name} <$user->{screen_name}> since $user->{created_at}, id: $user->{id}";
+		say "$user->{name} : '$t'";
+		# only consider users that tweet and have friends (they are following someone)
+		next if ($user->{statuses_count} == 0 && $user->{friends_count} == 0);
+		my $n = $user->{name};
+		$n =~ s/\s+/_/g;
+		
+		my $outfilename = "./$dir/twitterusers.$n." . $user->{screen_name} . ".json";
+		open my $outfile, ">", $outfilename;
+		for my $user (@$r) {			 
+ 
+			print $outfile  $coder->encode ($r);
+			
+		}
+		close $outfile;
+
+		$t = "";
+		sleep 1;
 	}
-	
-} catch {
-	my $err = $_ ;
-	die Dump $_ unless blessed $err && $err->isa('Net::Twitter::Error');
+
+}
+catch {
+	my $err = $_;
+	warn Dump $_ unless blessed $err && $err->isa('Net::Twitter::Error');
 
 	warn Dump "HTTP Response Code: ", $err->code, "\n", "HTTP Message......: ", $err->message, "\n", "Twitter error.....: ", $err->error, "\n";
 }
-
 
 =pod
 - contributors_enabled: !!perl/scalar:JSON::XS::Boolean 0
