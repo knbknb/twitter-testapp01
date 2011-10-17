@@ -22,6 +22,8 @@ $opts{user} ||= "Knut Behrends";
 
 # When no authentication is required:
 #my $nt = Net::Twitter->new(legacy => 0);
+
+# As of 13-Aug-2010, Twitter requires OAuth for authenticated requests:
 my $consumer_key    = "PHzdOCT7ykEQxSnfRLU0g";
 my $consumer_secret = `grep cs= ~/.twitconfig | cut -c 4-`;
 my $token           = "51690654-m8eqF1EOVoyIwnDxYnLykgANEGpTfSTLvgzshhpOd";
@@ -29,7 +31,7 @@ my $token_secret    = `grep ts= ~/.twitconfig | cut -c 4-`;
 chomp $consumer_secret;
 chomp $token_secret;
 
-# As of 13-Aug-2010, Twitter requires OAuth for authenticated requests
+
 my $nt = Net::Twitter->new(
 	traits              => [qw/OAuth API::Search API::REST/],
 	consumer_key        => $consumer_key,
