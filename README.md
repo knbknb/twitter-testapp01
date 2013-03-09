@@ -5,7 +5,7 @@ This is my first github repo; I created it in 2011; it is just a simple command-
 The code shown here was just for practicing, 
   1. for learning to interact with github.com, and 
   2. to develop an app for the Twitter search API.
-  3. to learn the basic s about OAuth 
+  3. to learn the basics about OAuth (v1 I guess - can't recall)
 
 To my understanding, to use the Twitter API at all, you needed (at least in 2011) to register an app with a valid URL, however trivial the app might be.
 Don't know if the app itself was really validated by a Twitter employee/bot at app-registration-time, 
