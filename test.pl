@@ -30,7 +30,7 @@ my $nt = Net::Twitter->new(
 #exit;
 my $high_water = 10;
 eval {
-	my $statuses = $nt->friends_timeline( { since_id => $high_water, count => 100 } );
+	my $statuses = $nt->home_timeline( { since_id => $high_water, count => 100 } );
 	for my $status (@$statuses) {
 		print "$status->{created_at} <$status->{user}{screen_name}> $status->{text}\n";
 	}
