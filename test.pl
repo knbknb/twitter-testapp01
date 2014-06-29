@@ -17,6 +17,7 @@ chomp $consumer_secret;
 chomp $token_secret;
 
 # As of 13-Aug-2010, Twitter requires OAuth for authenticated requests
+# as of ~2012, Twitter no longer supports API v1.0
 my $nt = Net::Twitter->new(
 	traits              => [qw/OAuth API::RESTv1_1 RetryOnError/],
 	consumer_key        => $consumer_key,

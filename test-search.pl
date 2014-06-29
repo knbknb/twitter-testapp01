@@ -6,7 +6,8 @@
 #
 # SQL command , output piped into this script
 # sqsh <credentials> -C "set rowcount 2 select DISTINCT first_name + ' ' + middle_names + ' ' + last_name as names from person where last_name like 'St%' order by last_name asc" -h -J iso_1 -b | grep -vr '^\s*$' |  uniq | xargs -i perl test-search.pl --user="{}"
-
+#
+# sqsh <credentials> -C "select DISTINCT first_name + ' ' + isnull(' ' + middle_names + ' ', '') +  ' ' + last_name  as names from person /* where last_name like 'St%' */ order by 1 " -h -J iso_1 -b  | perl -pE 's/[\t ]+/ /g' | perl -pE 's/^\s+$//s' > contacts.txt
 use Modern::Perl;
 use Net::Twitter;
 use Scalar::Util 'blessed';
@@ -32,7 +33,8 @@ my $token_secret    = `grep ts= ~/.twitconfig | cut -c 4-`;
 chomp $consumer_secret;
 chomp $token_secret;
 
-
+# As of 13-Aug-2010, Twitter requires OAuth for authenticated requests
+# as of ~2012, Twitter no longer supports API v1.0
 my $nt = Net::Twitter->new(
 	traits              => [qw/API::RESTv1_1/],
 #	traits              => [qw/OAuth API::Search API::REST/],
