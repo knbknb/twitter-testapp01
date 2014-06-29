@@ -49,13 +49,20 @@ my $search_term = $opts{user};
 $search_term =~ s/\s+$//;
 $search_term =~ s/^\s+//;
 try {
-	my $r = $nt->users_search($search_term);
-        my $search_term_lc = lc $search_term;
-        $search_term_lc =~  s/\W+/_/g;
-	#
-	#print Dump $r  ;
+    #my $r = $nt->users_search($search_term);
+    my $search_term_lc = lc $search_term;
+    $search_term_lc =~  s/\W+/_/g;
+
     my $dir = "twusers"; 
     mkdir $dir unless -d $dir;
+                if (-d "$dir/$search_term_lc" &&  $opts{skip_existing}){
+                     say "skipping dir, no work to do, exit.  '$search_term_lc'";
+                     say "";
+                    exit; 
+                } elsif (! -d  "$dir/$search_term_lc"){
+        	        mkdir "$dir/$search_term_lc" ;
+                }
+    my $r = $nt->users_search($search_term);
     my $coder = JSON::XS->new->utf8->pretty->allow_nonref;
 	for my $user (@$r) {
 		
@@ -69,13 +76,6 @@ try {
 		next if ($user->{statuses_count} == 0 && $user->{friends_count} == 0);
 		my $n = $user->{name};
 		$n =~ s/\s+/_/g;
-                if (-d "$dir/$search_term_lc" &&  $opts{skip_existing}){
-                     say "skipping dir  '$search_term_lc'";
-                     say "";
-                    next; 
-                } elsif (! -d  "$dir/$search_term_lc"){
-        	        mkdir "$dir/$search_term_lc" ;
-                }
 		my $outfilename = "./$dir/$search_term_lc/twitterusers.$n--" . $user->{screen_name} . ".json";
 		open my $outfile, ">", $outfilename;
 		for my $user (@$r) {			 
@@ -86,7 +86,7 @@ try {
 		close $outfile;
 
 		$t = "";
-		sleep 1;
+		sleep 6;
 	}
 
 }
