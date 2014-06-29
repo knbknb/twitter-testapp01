@@ -17,8 +17,9 @@ use Try::Tiny;
 use autodie;
 
 my %opts = ();
-GetOptions( \%opts, 'user=s' );
+GetOptions( \%opts, 'user=s' , 'skip_existing');
 $opts{user} ||= "Knut Behrends";
+$opts{skip_existing} ||= 0;
 
 # When no authentication is required:
 #my $nt = Net::Twitter->new(legacy => 0);
@@ -26,24 +27,29 @@ $opts{user} ||= "Knut Behrends";
 # As of 13-Aug-2010, Twitter requires OAuth for authenticated requests:
 my $consumer_key    = "PHzdOCT7ykEQxSnfRLU0g";
 my $consumer_secret = `grep cs= ~/.twitconfig | cut -c 4-`;
-my $token           = "51690654-m8eqF1EOVoyIwnDxYnLykgANEGpTfSTLvgzshhpOd";
+my $token           = "51690654-120SFwNLis2v7Agzw1NV0G1cBpRNnJacxkqY4OKMc";
 my $token_secret    = `grep ts= ~/.twitconfig | cut -c 4-`;
 chomp $consumer_secret;
 chomp $token_secret;
 
 
 my $nt = Net::Twitter->new(
-	traits              => [qw/OAuth API::Search API::REST/],
+	traits              => [qw/API::RESTv1_1/],
+#	traits              => [qw/OAuth API::Search API::REST/],
 	consumer_key        => $consumer_key,
 	consumer_secret     => $consumer_secret,
 	access_token        => $token,
 	access_token_secret => $token_secret,
+         ssl => 1
 );
 
 my $search_term = $opts{user};
+$search_term =~ s/\s+$//;
+$search_term =~ s/^\s+//;
 try {
 	my $r = $nt->users_search($search_term);
-
+        my $search_term_lc = lc $search_term;
+        $search_term_lc =~  s/\W+/_/g;
 	#
 	#print Dump $r  ;
     my $dir = "twusers"; 
@@ -61,8 +67,14 @@ try {
 		next if ($user->{statuses_count} == 0 && $user->{friends_count} == 0);
 		my $n = $user->{name};
 		$n =~ s/\s+/_/g;
-		
-		my $outfilename = "./$dir/twitterusers.$n." . $user->{screen_name} . ".json";
+                if (-d "$dir/$search_term_lc" &&  $opts{skip_existing}){
+                     say "skipping dir  '$search_term_lc'";
+                     say "";
+                    next; 
+                } elsif (! -d  "$dir/$search_term_lc"){
+        	        mkdir "$dir/$search_term_lc" ;
+                }
+		my $outfilename = "./$dir/$search_term_lc/twitterusers.$n--" . $user->{screen_name} . ".json";
 		open my $outfile, ">", $outfilename;
 		for my $user (@$r) {			 
  
