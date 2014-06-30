@@ -78,11 +78,11 @@ try {
 		$n =~ s/\s+/_/g;
 		my $outfilename = "./$dir/$search_term_lc/twitterusers.$n--" . $user->{screen_name} . ".json";
 		open my $outfile, ">", $outfilename;
-		for my $user (@$r) {			 
+		#for my $user (@$r) {			 
  
 			print $outfile  $coder->encode ($r);
 			
-		}
+		#}
 		close $outfile;
 
 		$t = "";
