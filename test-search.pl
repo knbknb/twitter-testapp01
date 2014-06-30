@@ -78,13 +78,18 @@ try {
 		$n =~ s/\s+/_/g;
 		my $outfilename = "./$dir/$search_term_lc/twitterusers.$n--" . $user->{screen_name} . ".json";
 		open my $outfile, ">", $outfilename;
-		#for my $user (@$r) {			 
- 
-			print $outfile  $coder->encode ($r);
+		print $outfile  $coder->encode ($r);
+		#Parameters: user_id, screen_name, cursor
+		my $friends = $nt->friends_list({"screen_name" => $user->{screen_name});
 			
-		#}
-		close $outfile;
-
+		for my $friend (@$friends) 
+			my $outfilename2 = "./$dir/$search_term_lc/friends/twitterusers.$n--" . $friend->{screen_name} . ".json";
+			my $fdata = $nt->users_search($friend);
+	 		open my $outfile2, ">", $outfilename;
+			print $outfile2  $coder->encode ($fdata);
+			close $outfile2;
+		}
+		
 		$t = "";
 		sleep 6;
 	}
