@@ -2,9 +2,11 @@ twitter-testapp01
 =========
 This was my first github repo; I created it in 2011; it is just a simple command-line app written in Perl. 
 
+This app is for my own personal use.
+
 The code shown here was just for practicing, 
   1. for learning to interact with github.com, and 
-  2. to develop an app for the Twitter search API.
+  2. to develop a perl app for the Twitter search API.
   3. to learn the basics about OAuth (v1 I guess - can't recall)
 
 To my understanding, to use the Twitter API at all, you needed (at least in 2011) to register an app with a valid URL, however trivial the app might be.
