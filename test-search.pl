@@ -6,7 +6,8 @@
 #
 # SQL command , output piped into this script
 # sqsh <credentials> -C "set rowcount 2 select DISTINCT first_name + ' ' + middle_names + ' ' + last_name as names from person where last_name like 'St%' order by last_name asc" -h -J iso_1 -b | grep -vr '^\s*$' |  uniq | xargs -i perl test-search.pl --user="{}"
-
+#
+# sqsh <credentials> -C "select DISTINCT first_name + ' ' + isnull(' ' + middle_names + ' ', '') +  ' ' + last_name  as names from person /* where last_name like 'St%' */ order by 1 " -h -J iso_1 -b  | perl -pE 's/[\t ]+/ /g' | perl -pE 's/^\s+$//s' > contacts.txt
 use Modern::Perl;
 use Net::Twitter;
 use Scalar::Util 'blessed';
@@ -17,35 +18,51 @@ use Try::Tiny;
 use autodie;
 
 my %opts = ();
-GetOptions( \%opts, 'user=s' );
+GetOptions( \%opts, 'user=s' , 'skip_existing');
 $opts{user} ||= "Knut Behrends";
+$opts{skip_existing} ||= 0;
 
 # When no authentication is required:
 #my $nt = Net::Twitter->new(legacy => 0);
+
+# As of 13-Aug-2010, Twitter requires OAuth for authenticated requests:
 my $consumer_key    = "PHzdOCT7ykEQxSnfRLU0g";
 my $consumer_secret = `grep cs= ~/.twitconfig | cut -c 4-`;
-my $token           = "51690654-m8eqF1EOVoyIwnDxYnLykgANEGpTfSTLvgzshhpOd";
+my $token           = "51690654-120SFwNLis2v7Agzw1NV0G1cBpRNnJacxkqY4OKMc";
 my $token_secret    = `grep ts= ~/.twitconfig | cut -c 4-`;
 chomp $consumer_secret;
 chomp $token_secret;
 
 # As of 13-Aug-2010, Twitter requires OAuth for authenticated requests
+# as of ~2012, Twitter no longer supports API v1.0
 my $nt = Net::Twitter->new(
-	traits              => [qw/OAuth API::Search API::REST/],
+	traits              => [qw/API::RESTv1_1/],
+#	traits              => [qw/OAuth API::Search API::REST/],
 	consumer_key        => $consumer_key,
 	consumer_secret     => $consumer_secret,
 	access_token        => $token,
 	access_token_secret => $token_secret,
+         ssl => 1
 );
 
 my $search_term = $opts{user};
+$search_term =~ s/\s+$//;
+$search_term =~ s/^\s+//;
 try {
-	my $r = $nt->users_search($search_term);
+    #my $r = $nt->users_search($search_term);
+    my $search_term_lc = lc $search_term;
+    $search_term_lc =~  s/\W+/_/g;
 
-	#
-	#print Dump $r  ;
     my $dir = "twusers"; 
     mkdir $dir unless -d $dir;
+                if (-d "$dir/$search_term_lc" &&  $opts{skip_existing}){
+                     say "skipping dir, no work to do, exit.  '$search_term_lc'";
+                     say "";
+                    exit; 
+                } elsif (! -d  "$dir/$search_term_lc"){
+        	        mkdir "$dir/$search_term_lc" ;
+                }
+    my $r = $nt->users_search($search_term);
     my $coder = JSON::XS->new->utf8->pretty->allow_nonref;
 	for my $user (@$r) {
 		
@@ -59,18 +76,22 @@ try {
 		next if ($user->{statuses_count} == 0 && $user->{friends_count} == 0);
 		my $n = $user->{name};
 		$n =~ s/\s+/_/g;
-		
-		my $outfilename = "./$dir/twitterusers.$n." . $user->{screen_name} . ".json";
+		my $outfilename = "./$dir/$search_term_lc/twitterusers.$n--" . $user->{screen_name} . ".json";
 		open my $outfile, ">", $outfilename;
-		for my $user (@$r) {			 
- 
-			print $outfile  $coder->encode ($r);
+		print $outfile  $coder->encode ($r);
+		#Parameters: user_id, screen_name, cursor
+		my $friends = $nt->friends_list({"screen_name" => $user->{screen_name});
 			
+		for my $friend (@$friends) 
+			my $outfilename2 = "./$dir/$search_term_lc/friends/twitterusers.$n--" . $friend->{screen_name} . ".json";
+			my $fdata = $nt->users_search($friend);
+	 		open my $outfile2, ">", $outfilename;
+			print $outfile2  $coder->encode ($fdata);
+			close $outfile2;
 		}
-		close $outfile;
-
+		
 		$t = "";
-		sleep 1;
+		sleep 6;
 	}
 
 }

@@ -11,14 +11,15 @@ use Scalar::Util 'blessed';
 #my $nt = Net::Twitter->new(legacy => 0);
 my $consumer_key    = "PHzdOCT7ykEQxSnfRLU0g";
 my $consumer_secret = `grep cs= ~/.twitconfig | cut -c 4-`;
-my $token           = "51690654-m8eqF1EOVoyIwnDxYnLykgANEGpTfSTLvgzshhpOd";
+my $token           = "51690654-120SFwNLis2v7Agzw1NV0G1cBpRNnJacxkqY4OKMc";
 my $token_secret    = `grep ts= ~/.twitconfig | cut -c 4-`;
 chomp $consumer_secret;
 chomp $token_secret;
 
 # As of 13-Aug-2010, Twitter requires OAuth for authenticated requests
+# as of ~2012, Twitter no longer supports API v1.0
 my $nt = Net::Twitter->new(
-	traits              => [qw/OAuth API::REST/],
+	traits              => [qw/OAuth API::RESTv1_1 RetryOnError/],
 	consumer_key        => $consumer_key,
 	consumer_secret     => $consumer_secret,
 	access_token        => $token,
@@ -30,7 +31,7 @@ my $nt = Net::Twitter->new(
 #exit;
 my $high_water = 10;
 eval {
-	my $statuses = $nt->friends_timeline( { since_id => $high_water, count => 100 } );
+	my $statuses = $nt->home_timeline( { since_id => $high_water, count => 100 } );
 	for my $status (@$statuses) {
 		print "$status->{created_at} <$status->{user}{screen_name}> $status->{text}\n";
 	}
