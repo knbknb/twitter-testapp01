@@ -1,5 +1,5 @@
 #!/bin/bash
-start="788"  
+start="1088"  
 step="60"  # api calls capped: max 60 calls per hour 
 cnt=`wc -l contacts.txt | cut -d" " -f1`
 IFS=$'\n'

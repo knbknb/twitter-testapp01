@@ -23,6 +23,7 @@ my $nt = Net::Twitter->new(
 	consumer_secret     => $consumer_secret,
 	access_token        => $token,
 	access_token_secret => $token_secret,
+        ssl => 1
 );
 
 #my $result = $nt->update('Hello, world! - created this tweet from boilerplate code of Net::Twitter perl module.');
