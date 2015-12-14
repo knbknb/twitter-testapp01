@@ -1,6 +1,6 @@
 #!/bin/bash
-start="1088"  
-step="60"  # api calls capped: max 60 calls per hour 
+start="1"  
+step="15"  # api calls capped: max 15 calls per 15 minutes
 cnt=`wc -l contacts.txt | cut -d" " -f1`
 IFS=$'\n'
 
@@ -16,7 +16,7 @@ while [ "$start" -le "$cnt" ]; do
  done
 start=`expr $start + $step`
 
-# sleep for more than 1 hour
-sleep 3700 
+# sleep for more than 15 minutes 
+sleep 950 
 done;
 

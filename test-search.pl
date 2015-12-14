@@ -85,7 +85,7 @@ try {
 		$n =~ s/^\s+//g;
 		$n =~ s/\s+$//g;
 		$n =~ s/\s+/_/g;
-		$n = unidecode($n);
+		#$n = unidecode($n);
 		my $outfilename = "./$dir/$search_term_lc/twitterusers.$n--" . $user->{screen_name} . ".json";
 		open my $outfile, ">", $outfilename;
 		print $outfile  $coder->encode ($r);
