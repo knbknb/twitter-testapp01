@@ -8,6 +8,11 @@
 # sqsh <credentials> -C "set rowcount 2 select DISTINCT first_name + ' ' + middle_names + ' ' + last_name as names from person where last_name like 'St%' order by last_name asc" -h -J iso_1 -b | grep -vr '^\s*$' |  uniq | xargs -i perl test-search.pl --user="{}"
 #
 # sqsh <credentials> -C "select DISTINCT first_name + ' ' + isnull(' ' + middle_names + ' ', '') +  ' ' + last_name  as names from person /* where last_name like 'St%' */ order by 1 " -h -J iso_1 -b  | perl -pE 's/[\t ]+/ /g' | perl -pE 's/^\s+$//s' > contacts.txt
+#  " select DISTINCT first_name + ' ' + middle_names + ' ' + last_name as names from person where last_name like '%' order by names asc" -h -J iso_1 -b | egrep -vr '^\s*$' - |  uniq > contacts.tx
+# 
+# perl -nl -MList::Util -E "BEGIN{@sample = (List::Util::shuffle(1..8604))[1..5]; } print if  List::Util::any {\$_ == \$.} @sample;" ./contacts.txt
+#
+# -C  "select DISTINCT first_name + ' ' + isnull(' ' + middle_names + ' ', '') +  ' ' + last_name  as names from person /* where last_name like 'St%' */ order by 1 " -h -J iso_1 -b 2>/dev/null | perl -pE 's/[\t ]+/ /g' | perl -pE 's/^\s+$//s' | perl -nl -MList::Util -E "BEGIN{@sample = (List::Util::shuffle(1..8604))[1..5]; } print if  List::Util::any {\$_ == \$.} @sample;" -
 use Modern::Perl;
 use Net::Twitter;
 use Scalar::Util 'blessed';
@@ -15,6 +20,7 @@ use JSON::XS;
 use YAML::XS;
 use Getopt::Long;
 use Try::Tiny;
+use Text::Unidecode;
 use autodie;
 
 my %opts = ();
@@ -55,12 +61,13 @@ try {
 
     my $dir = "twusers"; 
     mkdir $dir unless -d $dir;
-                if (-d "$dir/$search_term_lc" &&  $opts{skip_existing}){
+               my $newdir = unidecode("$dir/$search_term_lc");
+                if (-d $newdir &&  $opts{skip_existing}){
                      say "skipping dir, no work to do, exit.  '$search_term_lc'";
                      say "";
                     exit; 
-                } elsif (! -d  "$dir/$search_term_lc"){
-        	        mkdir "$dir/$search_term_lc" ;
+                } elsif (! -d  $newdir){
+        	        mkdir $newdir ;
                 }
     my $r = $nt->users_search($search_term);
     my $coder = JSON::XS->new->utf8->pretty->allow_nonref;
@@ -70,24 +77,31 @@ try {
 		say "search_term: $search_term";
 		say "$user->{description}:" if $user->{description};
 		say "tweets: $user->{statuses_count}, friends: $user->{friends_count}";
-		say "$user->{name} <$user->{screen_name}> since $user->{created_at}, id: $user->{id}";
-		say "$user->{name} : '$t'";
+		say unidecode("$user->{name} <$user->{screen_name}> since $user->{created_at}, id: $user->{id}");
+		say unidecode("$user->{name} : '$t'");
 		# only consider users that tweet and have friends (they are following someone)
 		next if ($user->{statuses_count} == 0 && $user->{friends_count} == 0);
 		my $n = $user->{name};
+		$n =~ s/^\s+//g;
+		$n =~ s/\s+$//g;
 		$n =~ s/\s+/_/g;
+		$n = unidecode($n);
 		my $outfilename = "./$dir/$search_term_lc/twitterusers.$n--" . $user->{screen_name} . ".json";
 		open my $outfile, ">", $outfilename;
 		print $outfile  $coder->encode ($r);
 		#Parameters: user_id, screen_name, cursor
-		my $friends = $nt->friends_list({"screen_name" => $user->{screen_name});
-			
-		for my $friend (@$friends) 
-			my $outfilename2 = "./$dir/$search_term_lc/friends/twitterusers.$n--" . $friend->{screen_name} . ".json";
-			my $fdata = $nt->users_search($friend);
+		my $friends = $nt->friends_list({"screen_name" => $user->{screen_name}});
+		print Dump ref $friends;
+	
+		for my $friend (%{$friends}){
+                        my $outfilename2; 
+			eval { $outfilename2 = "./$dir/$search_term_lc/friends/twitterusers.$n--" . unidecode($friend->{screen_name}) . ".json";};
+			unless ( $@){my $fdata = $nt->users_search($friend);
 	 		open my $outfile2, ">", $outfilename;
 			print $outfile2  $coder->encode ($fdata);
 			close $outfile2;
+                        }
+
 		}
 		
 		$t = "";
