@@ -1,5 +1,5 @@
 #!/bin/bash
-start="1"  
+start="15"  
 step="15"  # api calls capped: max 15 calls per 15 minutes
 cnt=`wc -l contacts.txt | cut -d" " -f1`
 IFS=$'\n'
@@ -13,6 +13,7 @@ while [ "$start" -le "$cnt" ]; do
   perl ./test-search.pl --user="$user" | tee -a twitterusers.txt
   echo
   echo
+  sleep 950 
  done
 start=`expr $start + $step`
 
