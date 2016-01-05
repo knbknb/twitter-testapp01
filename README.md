@@ -12,15 +12,18 @@ This app is for my own personal use.
 
 The code shown here was just for practicing, 
   1. for learning to interact with github.com, and 
-  2. to develop a perl app for the Twitter search API.
-  3. to learn the basics about OAuth (v1 I guess - can't recall)
+  2. to develop a perl app for the Twitter Search API.
+  3. to learn the basics about OAuth (v1)
 
 To my understanding, to use the Twitter API at all, you needed (at least in 2011) to register an app with a valid URL, however trivial the app might be.
+
+Registering an app is required for getting OAuth credentials, comprising 4 "Passwords": The (App) Access Token, its Secret; and the Consumer token, the Consumer Token Secret. This is the main purpose for keeping this online.
+
 Don't know if the app itself was really validated by a Twitter employee/bot at app-registration-time, 
 or if you just needed to provide an URL to a github repo. A script at Twitter might have verified its existence, 
-or if it is be necessary for some OAuth mechanism  to work.
+or if it is be necessary for some OAuth mechanism to work.
 
-Meanwhile, Twitter might have changed its authorization requirements. OAuth v1 is no longer supported.
+Meanwhile, Twitter might have changed its authorization requirements, or some details of the authentication procedure.
 
 In any case, the Perl app was just for private use. 
 
