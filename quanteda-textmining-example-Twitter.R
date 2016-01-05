@@ -1,5 +1,6 @@
 # https://htmlpreview.github.io/?https://github.com/kbenoit/quanteda/blob/master/vignettes/quickstart.html#fn1
-
+#
+# Do something with the Twitter data stored as json files on disk (in a single zip file)
 library(quanteda)
 library(jsonlite)
 library(dplyr)
